@@ -29,6 +29,7 @@ class UniFi extends IPSModule {
         //These lines are parsed on Symcon Startup or Instance creation
         //You cannot use variables here. Just static values.
         $this->RegisterPropertyString("IPAddress", "https://127.0.0.1:8443");
+        $this->RegisterPropertyBoolean("UnifiDreamMachine", TRUE);
         $this->RegisterPropertyString("UserName", "admin");
         $this->RegisterPropertyString("UserPassword", "");
         $this->RegisterPropertyString("Clients", "");
@@ -45,7 +46,20 @@ class UniFi extends IPSModule {
      */
     private function login()
     {
-        $this->baseURL = $this->ReadPropertyString("IPAddress");
+        $this->IPAddress = $this->ReadPropertyString("IPAddress");
+        
+        $this->UnifiDreamMachine = $this->ReadPropertyBoolean("UnifiDreamMachine");
+        
+        if ($this->UnifiDreamMachine)
+        {
+        	$this->baseURL = $this->ReadPropertyString("IPAddress")."/proxy/network";
+        }
+        else 
+        {
+         	$this->baseURL = $this->ReadPropertyString("IPAddress");
+        }
+        
+        
         $this->userName = $this->ReadPropertyString("UserName");
         $this->userPassword = $this->ReadPropertyString("UserPassword");
 
@@ -54,8 +68,17 @@ class UniFi extends IPSModule {
 
         curl_setopt($this->ch, CURLOPT_HEADER, 1);
         curl_setopt($this->ch, CURLOPT_REFERER, $this->baseurl.'/login');
-        curl_setopt($this->ch, CURLOPT_URL, $this->baseURL.'/api/login');
-        curl_setopt($this->ch, CURLOPT_POSTFIELDS, json_encode(['username' => $this->userName, 'password' => $this->userPassword]));
+        if ($this->UnifiDreamMachine)
+        {
+      	  curl_setopt($this->ch, CURLOPT_URL, $this->IPAddress.'/api/auth/login');
+      	  curl_setopt($this->ch, CURLOPT_POSTFIELDS, 'username='.$this->userName.'&password='.$this->userPassword);
+      	}
+      	else 
+      	{
+      	  curl_setopt($this->ch, CURLOPT_URL, $this->baseURL.'/api/login');	
+      	  curl_setopt($this->ch, CURLOPT_POSTFIELDS, json_encode(['username' => $this->userName, 'password' => $this->userPassword]));
+      	}                
+        
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, FALSE);
         curl_setopt($this->ch, CURLOPT_SSL_VERIFYHOST, FALSE);
@@ -91,7 +114,7 @@ class UniFi extends IPSModule {
             $this->cookies = implode(';', $results[1]);
             if (!empty($body)) {
                 if (($code >= 200) && ($code < 400)) {
-                    if (strpos($this->cookies, 'unifises') !== false) {
+                    if ((strpos($this->cookies, 'unifises') !== false) || ($this->UnifiDreamMachine)) {
                         $this->is_loggedin = true;
                         $this->SetStatus(102); // login OK
                     }
@@ -115,7 +138,13 @@ class UniFi extends IPSModule {
         if (!$this->is_loggedin) {
             return false;
         }
-        $this->exec_curl($this->baseURL . '/logout');
+        if ($this->UnifiDreamMachine)
+        {
+      	  $this->exec_curl($this->ReadPropertyString("IPAddress") . '/logout');
+      	}
+      	else {
+      	  $this->exec_curl($this->baseURL . '/logout');	
+      	}        
         $this->is_loggedin = false;
         $this->cookies = '';
         return true;
@@ -1998,7 +2027,13 @@ else
             if (is_object($this->last_results_raw)) {
                 foreach ($this->last_results_raw->data as $aps) {
                     $ident = $aps->_id;
-                    $catID = $this->CreateCategoryByIdent($instance_APS_ID, $ident, $aps->name);
+                    if (property_exists($aps, 'name'))
+                    {
+                    	$catID = $this->CreateCategoryByIdent($instance_APS_ID, $ident, $aps->name);
+                    }
+                    else {
+                      $catID = $this->CreateCategoryByIdent($instance_APS_ID, $ident, $aps->model);	
+                    }                    
                     $this->CreateVariable("ID", 3, $aps->_id, $ident . "_id", $catID);
                     $this->CreateVariable("Uptime", 1, $aps->uptime, $ident . "_uptime", $catID, "~UnixTimestampTime");
                     if (isset($aps->ip)) $this->CreateVariable("IP", 3, $aps->ip, $ident . "_ip", $catID);     
@@ -2046,6 +2081,7 @@ else
         parent::ApplyChanges();
 
         $this->baseURL = $this->ReadPropertyString("IPAddress");
+        $this->UnifiDreamMachine = $this->ReadPropertyBoolean("UnifiDreamMachine");
         $this->user = $this->ReadPropertyString("UserName");
         $this->password = $this->ReadPropertyString("UserPassword");
         $this->site = $this->ReadPropertyString("Site");
@@ -2070,6 +2106,7 @@ else
 
     public function UpdateUniFiNetworkData() {
         $this->baseURL = $this->ReadPropertyString("IPAddress");
+        $this->UnifiDreamMachine = $this->ReadPropertyBoolean("UnifiDreamMachine");
         $this->user = $this->ReadPropertyString("UserName");
         $this->password = $this->ReadPropertyString("UserPassword");
         $this->site = $this->ReadPropertyString("Site");
@@ -2093,6 +2130,7 @@ else
 
     public function UpdateUniFiClientData() {
         $this->baseURL = $this->ReadPropertyString("IPAddress");
+        $this->UnifiDreamMachine = $this->ReadPropertyBoolean("UnifiDreamMachine");
         $this->user = $this->ReadPropertyString("UserName");
         $this->password = $this->ReadPropertyString("UserPassword");
         $this->site = $this->ReadPropertyString("Site");
