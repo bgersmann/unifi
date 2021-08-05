@@ -2,12 +2,13 @@
 	"elements":
 	[
 		{ "name": "IPAddress",        "type": "ValidationTextBox", "caption": "IP-Address/Host" },
+		{ "name": "UnifiDreamMachine",         "type": "CheckBox", "caption": "UnifiDreamMachine" },
 		{ "name": "UserName",         "type": "ValidationTextBox", "caption": "Username" },
 		{ "name": "UserPassword",     "type": "PasswordTextBox", "caption": "Password" },
-                { "name": "Site",             "type": "ValidationTextBox", "caption": "UniFi Site" },
-                { "name": "Intervall_Network",        "type": "IntervalBox", "caption": "Network Update (s)" },
-                { "name": "Intervall_Client",         "type": "IntervalBox", "caption": "Client Update (s)" },
-                { "name": "Debug",            "type": "CheckBox",  "caption": "Debug Mode" },
+    { "name": "Site",             "type": "ValidationTextBox", "caption": "UniFi Site" },
+    { "name": "Intervall_Network",        "type": "IntervalBox", "caption": "Network Update (s)" },
+    { "name": "Intervall_Client",         "type": "IntervalBox", "caption": "Client Update (s)" },
+    { "name": "Debug",            "type": "CheckBox",  "caption": "Debug Mode" },
 		{
 			"type": "List",
 			"name": "Clients",
