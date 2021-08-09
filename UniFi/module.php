@@ -67,10 +67,10 @@ class UniFi extends IPSModule {
         $this->ch = curl_init();
 
         curl_setopt($this->ch, CURLOPT_HEADER, 1);
-        curl_setopt($this->ch, CURLOPT_REFERER, $this->baseurl.'/login');
+        curl_setopt($this->ch, CURLOPT_REFERER, $this->baseURL.'/login');
         if ($this->UnifiDreamMachine)
         {
-      	  curl_setopt($this->ch, CURLOPT_URL, $this->IPAddress.'/api/auth/login');
+      	  curl_setopt($this->ch, CURLOPT_URL, $this->baseURL.'/api/auth/login');
       	  curl_setopt($this->ch, CURLOPT_POSTFIELDS, 'username='.$this->userName.'&password='.$this->userPassword);
       	}
       	else 
